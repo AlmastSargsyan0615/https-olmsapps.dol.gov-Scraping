@@ -30,7 +30,12 @@ def make_pdf_from_url(url, output_filename):
     is_html, content = get_html_content(url)
     if is_html:
         print("The response is an HTML page.")
-        pdfkit.from_url(url, output_filename, configuration=config)
+        try:
+            pdfkit.from_url(url, output_filename, configuration=config)
+        except Exception as e:
+            output_filename = "None"
+            print(f"An error occurred: {e}")
+            time.sleep(60)
         return output_filename
     else:
         print("The response is not an HTML page.")
@@ -78,7 +83,7 @@ def replace_invalid_characters(string):
     invalid_chars = '<>|:\/\"*?'
     for char in invalid_chars:
         string = string.replace(char, '-')
-    return string
+    return string[:100]
 
 def write_company_reports(data):
     with open(filename, 'a', newline='') as csvfile:  
@@ -107,8 +112,9 @@ def write_company_reports(data):
 
             employerName_folderpath = replace_invalid_characters(data['employerName'])
             destination_relative_path = f"{foldername}/{employerName_folderpath}_{data['fileNumber']}_{data['filerType']}"
-
-            move_file_to_destination( make_pdf_from_url(report['reportUrl'], report['reportName']), destination_relative_path)
+            print("------>", destination_relative_path, len((destination_relative_path)))
+            if(make_pdf_from_url(report['reportUrl'], report['reportName']) != "None"):
+                move_file_to_destination( make_pdf_from_url(report['reportUrl'], report['reportName']), destination_relative_path)
    
 def get_company_reports(sr_num):
     url = "https://olmsapps.dol.gov/olpdr/GetLM10FilerDetailServlet"
